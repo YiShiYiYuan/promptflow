@@ -45,9 +45,7 @@ class OpenAIMetricsCalculator:
             usage = output.get("usage")
             if isinstance(usage, dict):
                 return usage
-            self._log_warning(
-                "Cannot find openai metrics in output, will calculate metrics from response data directly."
-            )
+            self._log_warning("Cannot find openai metrics in output, will calculate metrics from response data directly.")
 
         name = api_call.get("name")
         # Support both legacy api and OpenAI v1 api
@@ -85,28 +83,19 @@ class OpenAIMetricsCalculator:
             if not model:
                 model = inputs.get("model")
         if not model:
-            raise Exception(
-                "Cannot get a valid model to calculate metrics."
-                "Please specify a engine for AzureOpenAI API or a model for OpenAI API."
-            )
+            raise Exception("Cannot get a valid model to calculate metrics." "Please specify a engine for AzureOpenAI API or a model for OpenAI API.")
         return model
 
     def get_openai_metrics_for_chat_api(self, inputs, output):
         metrics = {}
         try:
-            enc, tokens_per_message, tokens_per_name = self._get_encoding_for_chat_api(
-                self._try_get_model(inputs, output)
-            )
-            metrics["prompt_tokens"] = self._get_prompt_tokens_from_messages(
-                inputs["messages"], enc, tokens_per_message, tokens_per_name
-            )
+            enc, tokens_per_message, tokens_per_name = self._get_encoding_for_chat_api(self._try_get_model(inputs, output))
+            metrics["prompt_tokens"] = self._get_prompt_tokens_from_messages(inputs["messages"], enc, tokens_per_message, tokens_per_name)
             if isinstance(output, list):
                 if IS_LEGACY_OPENAI:
                     metrics["completion_tokens"] = len(output)
                 else:
-                    metrics["completion_tokens"] = len(
-                        [chunk for chunk in output if chunk.choices and chunk.choices[0].delta.content]
-                    )
+                    metrics["completion_tokens"] = len([chunk for chunk in output if chunk.choices and chunk.choices[0].delta.content])
             else:
                 metrics["completion_tokens"] = self._get_completion_tokens_for_chat_api(output, enc)
             metrics["total_tokens"] = metrics["prompt_tokens"] + metrics["completion_tokens"]
@@ -168,9 +157,7 @@ class OpenAIMetricsCalculator:
                 if IS_LEGACY_OPENAI:
                     metrics["completion_tokens"] = len(output)
                 else:
-                    metrics["completion_tokens"] = len(
-                        [chunk for chunk in output if chunk.choices and chunk.choices[0].text]
-                    )
+                    metrics["completion_tokens"] = len([chunk for chunk in output if chunk.choices and chunk.choices[0].text])
             else:
                 metrics["completion_tokens"] = self._get_completion_tokens_for_completion_api(output, enc)
             metrics["total_tokens"] = metrics["prompt_tokens"] + metrics["completion_tokens"]
@@ -197,7 +184,11 @@ class OpenAIMetricsCalculator:
 
     def merge_metrics_dict(self, metrics: dict, metrics_to_merge: dict):
         for k, v in metrics_to_merge.items():
-            metrics[k] = metrics.get(k, 0) + v
+            if isinstance(v, dict) or isinstance(metrics.get(k), dict):
+                metrics[k] = self.merge_metrics_dict(metrics.get(k, {}), (v or {}))
+            elif v is not None:
+                metrics[k] = metrics.get(k, 0) + (v or 0)
+        return metrics
 
     def _log_warning(self, msg):
         if self._logger:

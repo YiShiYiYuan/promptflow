@@ -362,6 +362,16 @@ def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: st
             include_image = True
         elif chunk.strip() == "":
             continue
+        elif chunk.strip().startswith("![image](http://") or chunk.strip().startswith("![image](https://"):
+            chunk = chunk.strip()
+            image_url = chunk[9:-1]
+            result.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_url, "detail": image_detail},
+                }
+            )
+            include_image = True
         else:
             result.append({"type": "text", "text": chunk})
     return result if include_image else chat_str
