@@ -132,6 +132,14 @@ class TokenCollector:
         with self._lock:
             self._span_id_to_tokens[span_id] = tokens
 
+    def merge_metrics_dict(self, metrics: dict, metrics_to_merge: dict):
+        for k, v in metrics_to_merge.items():
+            if isinstance(v, dict) or isinstance(metrics.get(k), dict):
+                metrics[k] = self.merge_metrics_dict(metrics.get(k, {}), (v or {}))
+            elif v is not None:
+                metrics[k] = metrics.get(k, 0) + (v or 0)
+        return metrics
+
     def collect_openai_tokens_for_parent_span(self, span):
         tokens = self.try_get_openai_tokens(span.get_span_context().span_id)
         if tokens:
@@ -140,19 +148,13 @@ class TokenCollector:
             parent_span_id = span.parent.span_id
             with self._lock:
                 if parent_span_id in self._span_id_to_tokens:
-                    merged_tokens = {}
-                    for key in set(self._span_id_to_tokens[parent_span_id]) | set(tokens):
-                        parent_value = self._span_id_to_tokens[parent_span_id].get(key, 0)
-                        token_value = tokens.get(key, 0)
-                        if isinstance(parent_value, dict) and isinstance(token_value, dict):
-                            # Handle the case where both values are dictionaries
-                            merged_tokens[key] = {**parent_value, **token_value}
-                        elif isinstance(parent_value, dict) or isinstance(token_value, dict):
-                            # Handle the case where one value is a dictionary and the other is not
-                            merged_tokens[key] = parent_value if isinstance(parent_value, dict) else token_value
-                        else:
-                            merged_tokens[key] = int(parent_value or 0) + int(token_value or 0)
-                    self._span_id_to_tokens[parent_span_id] = merged_tokens
+                    # merged_tokens = {
+                    #     # When token count is None for some reason, we should default to 0.
+                    #     key: (self._span_id_to_tokens[parent_span_id].get(key, 0) or 0) + (tokens.get(key, 0) or 0)
+                    #     for key in set(self._span_id_to_tokens[parent_span_id]) | set(tokens)
+                    # }
+                    # self._span_id_to_tokens[parent_span_id] = merged_tokens
+                    self.merge_metrics_dict(self._span_id_to_tokens[parent_span_id], tokens)
                 else:
                     self._span_id_to_tokens[parent_span_id] = tokens
 
