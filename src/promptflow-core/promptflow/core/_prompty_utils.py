@@ -586,7 +586,7 @@ class ChatInputList(list):
         return "\n".join(map(str, self))
 
 
-def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: str):
+def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: str, role: str):
     chat_str = chat_str.strip()
     chunks = chat_str.split("\n")
     include_image = False
@@ -607,6 +607,18 @@ def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: st
             include_image = True
         elif chunk.strip() == "":
             continue
+        elif role == "user" and (
+            chunk.strip().startswith("![image](http://") or chunk.strip().startswith("![image](https://")
+        ):
+            chunk = chunk.strip()
+            image_url = chunk[9:-1]
+            result.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_url, "detail": image_detail},
+                }
+            )
+            include_image = True
         else:
             result.append({"type": "text", "text": chunk})
     return result if include_image else chat_str
@@ -680,7 +692,7 @@ def parse_tools(last_message, chunk, hash2images, image_detail):
         )
     else:
         last_message["tool_call_id"] = parsed_result[0]
-        last_message["content"] = to_content_str_or_list(parsed_result[1], hash2images, image_detail)
+        last_message["content"] = to_content_str_or_list(parsed_result[1], hash2images, image_detail, role="tool")
 
 
 def parse_chat(
@@ -737,10 +749,14 @@ def parse_chat(
                     )
                 # "name" is optional for other role types.
                 else:
-                    last_message["content"] = to_content_str_or_list(chunk, hash2images, image_detail)
+                    last_message["content"] = to_content_str_or_list(
+                        chunk, hash2images, image_detail, last_message["role"]
+                    )
             else:
                 last_message["name"] = parsed_result[0]
-                last_message["content"] = to_content_str_or_list(parsed_result[1], hash2images, image_detail)
+                last_message["content"] = to_content_str_or_list(
+                    parsed_result[1], hash2images, image_detail, last_message["role"]
+                )
         else:
             if chunk.strip() == "":
                 continue
