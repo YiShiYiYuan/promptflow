@@ -8,7 +8,7 @@ from typing import List, Mapping
 import uuid
 
 from jinja2 import Template
-from openai import APIConnectionError, APIStatusError, APITimeoutError, BadRequestError, OpenAIError, RateLimitError
+from openai import NOT_GIVEN, APIConnectionError, APIStatusError, APITimeoutError, BadRequestError, OpenAIError, RateLimitError
 
 from promptflow._cli._utils import get_workspace_triad_from_local
 from promptflow.connections import AzureOpenAIConnection, OpenAIConnection
@@ -552,9 +552,11 @@ def handle_openai_error(tries: int = 100, unprocessable_entity_error_tries: int 
       so small threshold and requiring consecutive errors.
     """
     def decorator(func):
+        handle_tries = tries
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             consecutive_422_error_count = 0
+            tries = min(handle_tries, int(os.environ.get("PF_OPENAI_RETRY_TIMES", 100)))
             for i in range(tries + 1):
                 try:
                     return func(*args, **kwargs)
@@ -1023,6 +1025,7 @@ def init_openai_client(connection: OpenAIConnection):
             raise e
 
     conn_dict = normalize_connection_config(connection)
+    conn_dict["timeout"] = os.environ.get("PF_OPENAI_TIMEOUT", NOT_GIVEN)
     return OpenAIClient(**conn_dict)
 
 
@@ -1038,4 +1041,5 @@ def init_azure_openai_client(connection: AzureOpenAIConnection):
             raise e
 
     conn_dict = normalize_connection_config(connection)
+    conn_dict["timeout"] = os.environ.get("PF_OPENAI_TIMEOUT", NOT_GIVEN)
     return AzureOpenAIClient(**conn_dict)
