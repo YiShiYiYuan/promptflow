@@ -2,7 +2,7 @@ name: promptflow-release-testing-matrix
 on:
   push:
     branches:
-      - v1.16.2_vision
+      - v1.17.1_vision
   workflow_call:
   workflow_dispatch:
     inputs:
@@ -44,7 +44,7 @@ jobs:
       uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.11"
     - uses: snok/install-poetry@v1
     - working-directory: ${{ env.TRACING_DIRECTORY }}
       run: poetry build -f wheel
