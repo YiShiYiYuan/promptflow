@@ -1042,7 +1042,7 @@ def init_openai_client(connection: OpenAIConnection):
             raise e
 
     conn_dict = normalize_connection_config(connection)
-    conn_dict["timeout"] = os.environ.get("PF_OPENAI_TIMEOUT", NOT_GIVEN)
+    conn_dict["timeout"] = float(os.environ["PF_OPENAI_TIMEOUT"]) if "PF_OPENAI_TIMEOUT" in os.environ else NOT_GIVEN
     return OpenAIClient(**conn_dict)
 
 
@@ -1058,5 +1058,5 @@ def init_azure_openai_client(connection: AzureOpenAIConnection):
             raise e
 
     conn_dict = normalize_connection_config(connection)
-    conn_dict["timeout"] = os.environ.get("PF_OPENAI_TIMEOUT", NOT_GIVEN)
+    conn_dict["timeout"] = float(os.environ["PF_OPENAI_TIMEOUT"]) if "PF_OPENAI_TIMEOUT" in os.environ else NOT_GIVEN
     return AzureOpenAIClient(**conn_dict)
