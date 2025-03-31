@@ -1,5 +1,4 @@
 import multiprocessing
-import os
 from pathlib import Path
 
 import pytest
@@ -39,9 +38,6 @@ except ImportError:
     def is_replay():
         return False
 
-
-# Enable tracing for testing
-os.environ["PF_DISABLE_TRACING"] = "false"
 
 PROMPTFLOW_ROOT = Path(__file__) / "../../.."
 
