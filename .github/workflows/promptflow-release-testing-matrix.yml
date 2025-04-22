@@ -70,7 +70,6 @@ jobs:
       id: get_version
       run: |
         VERSION=$(date +%Y.%m.%d)
-        VERSION=2025.04.14
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
     - name: Upload Wheel
       uses: actions/upload-artifact@v4
