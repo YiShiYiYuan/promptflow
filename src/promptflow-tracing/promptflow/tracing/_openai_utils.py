@@ -183,12 +183,12 @@ class OpenAIMetricsCalculator:
         return completion_tokens
 
     def merge_metrics_dict(self, metrics: dict, metrics_to_merge: dict):
-        metrics = metrics or {}
         for k, v in metrics_to_merge.items():
-            if isinstance(v, dict) or isinstance(metrics.get(k), dict):
-                metrics[k] = self.merge_metrics_dict(metrics.get(k, {}), (v or {}))
+            vm = metrics.get(k, None)
+            if isinstance(v, dict) or isinstance(vm, dict):
+                metrics[k] = self.merge_metrics_dict((vm or {}), (v or {}))
             elif v is not None:
-                metrics[k] = metrics.get(k, 0) + (v or 0)
+                metrics[k] = (vm or 0) + (v or 0)
         return metrics
 
     def _log_warning(self, msg):
