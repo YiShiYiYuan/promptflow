@@ -115,7 +115,9 @@ class OpenAIMetricsCalculator:
             tokens_per_message = 3
             tokens_per_name = 1
         else:
-            raise Exception(f"Calculating metrics for model {model} is not supported.")
+            tokens_per_message = 3
+            tokens_per_name = 1
+            # raise Exception(f"Calculating metrics for model {model} is not supported.")
         return enc, tokens_per_message, tokens_per_name
 
     def _get_prompt_tokens_from_messages(self, messages, enc, tokens_per_message, tokens_per_name):
