@@ -352,6 +352,7 @@ def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: st
     chunks = chat_str.split("\n")
     include_image = False
     result = []
+    pattern = r"\!\[\s*(image|video)\s*\]\((https?://.*?)\)"
     for chunk in chunks:
         if chunk.strip() in hash2images:
             image_message = {}
@@ -372,15 +373,18 @@ def to_content_str_or_list(chat_str: str, hash2images: Mapping, image_detail: st
             continue
         elif role == "user" and (
             chunk.strip().startswith("![image](http://") or chunk.strip().startswith("![image](https://")
+            or chunk.strip().startswith("![video](http://") or chunk.strip().startswith("![video](https://")
         ):
             chunk = chunk.strip()
-            image_url = chunk[9:-1]
-            result.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": image_url, "detail": image_detail},
-                }
-            )
+            matches = re.finditer(pattern, chunk)
+            for match in matches:
+                mime, url = match.groups()
+                result.append(
+                    {
+                        "type": f"{mime}_url",
+                        f"{mime}_url": {"url": url},
+                    }
+                )
             include_image = True
         else:
             result.append({"type": "text", "text": chunk})
