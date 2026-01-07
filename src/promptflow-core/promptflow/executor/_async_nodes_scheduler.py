@@ -188,6 +188,12 @@ class AsyncNodesScheduler:
         return await asyncio.get_running_loop().run_in_executor(executor, context.invoke_tool, node, f, kwargs)
 
     async def cancel(self):
+        # In web service environments (FastAPI, Gunicorn), force exit would terminate the entire worker process
+        # affecting all concurrent requests. Allow disabling this behavior via environment variable.
+        if os.environ.get("PF_DISABLE_FORCE_EXIT_ON_CANCEL", "").lower() in ("true", "1", "yes"):
+            flow_logger.info("Cancel requested, but force exit is disabled for web service mode.")
+            return
+
         flow_logger.info("Cancel requested, monitoring coroutines after cancellation.")
         loop = asyncio.get_running_loop()
         monitor = ThreadWithContextVars(target=monitor_coroutine_after_cancellation, args=(loop,))
