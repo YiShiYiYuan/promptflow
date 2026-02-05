@@ -111,7 +111,7 @@ jobs:
           Reinstall promptflow with the following command:
           ```bash
           pip uninstall -y promptflow promptflow-tracing promptflow-core promptflow-devkit promptflow-azure promptflow-rag promptflow-evals promptflow-tools
-          pip install promptflow-1.18.1-py3-none-any.whl promptflow_azure-1.18.0-py3-none-any.whl promptflow_core-1.18.0-py3-none-any.whl promptflow_devkit-1.18.0-py3-none-any.whl promptflow_tools-1.6.1-py3-none-any.whl promptflow_tracing-1.18.0-py3-none-any.whl
+          pip install promptflow-1.18.1-py3-none-any.whl promptflow_azure-1.18.0-py3-none-any.whl promptflow_core-1.18.0-py3-none-any.whl promptflow_devkit-1.18.0-py3-none-any.whl promptflow_tools-1.4.3-py3-none-any.whl promptflow_tracing-1.18.0-py3-none-any.whl
           ```
         files: |
           ${{ github.workspace }}/*.whl
